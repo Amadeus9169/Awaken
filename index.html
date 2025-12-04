@@ -2,619 +2,597 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Chat - iOS Vision</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-:root {
-    --primary-color: #007aff;
-    --border-color: #d2d2d7;
-    --border-radius: 980px; /* Use 50% for rounded corners */
-    --line-height: 1.4705882353;
-    --letter-spacing: -0.022em;
-    --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "SF Pro SC", "Helvetica Neue", "Helvetica", "PingFang SC", "Arial", sans-serif;
-    --padding: 10px; /* Define padding */
-    --font-size: 16px; /* Define font size */
-}
-
-body {
-    font-family: var(--font-family);
-    font-size: var(--font-size);
-    line-height: var(--line-height);
-    letter-spacing: var(--letter-spacing);
-    color: rgb(29, 29, 31);
-    background-color: rgb(245, 245, 247);
-    margin: 0;
-    padding: 0;
-    min-height: 100vh; /* Use min-height to allow content to expand */
-    /* overflow: hidden; Remove this unless absolutely necessary*/
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-weight: 400;
-    transition: all 0.3s ease-out;
-}
-
-input[type="text"],
-textarea,
-button,
-select {
-    padding: var(--padding);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    box-sizing: border-box;
-}
-
-button {
-    background-color: var(--primary-color);
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #005eff;
-}
-
-button:active {
-    background-color: #004de0;
-}
-
-button:disabled {
-    background-color: #c7c7cc;
-    cursor: not-allowed;
-}
-
-textarea {
-    resize: vertical;
-    min-height: 40px;
-    overflow: hidden;
-}
-
-textarea:focus {
-    outline: none;
-    border-color: #0065FA;
-    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
-}
-
-@supports (-webkit-hyphens: none) and (not (-ms-accelerator: true)) and (not (windows: true)) {
-    body {
-        font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-    }
-}
-
-        @media (max-width: 480px) {
-    body {
-        font-size: 16px;
-        padding: 10px;
-    }
-}
-
-/* Styles for larger screens (tablets and desktops) */
-@media (min-width: 768px) {
-    body {
-        font-size: 19px;
-        padding: 5px;
-    }
-}
-
-
-        h1, h2, h3 {
-            margin: 0 0 1em;
-            font-weight: 600;
-            color: #000000;
+        :root {
+            --primary-gradient: linear-gradient(135deg, #00C6FB 0%, #005BEA 100%);
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --text-color: #1d1d1f;
+            --user-text-color: #ffffff;
+            --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Helvetica Neue", sans-serif;
         }
 
-        p {
-            margin-bottom: 1em;
-            color: #333333;
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            color: var(--text-color);
+            background-color: #000; /* Fallback */
         }
 
-        a {
-            color: #007aff;
-            text-decoration: none;
-            transition: color 0.3s ease;
+        /* 动态背景层 */
+        #dynamic-bg {
+            position: fixed;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            z-index: -1;
+            background-size: cover;
+            background-position: center;
+            filter: blur(40px) brightness(0.9);
+            transition: background-image 1s ease-in-out;
+            transform: scale(1.1); /* 防止模糊边缘 */
         }
 
-        a:hover {
-            color: #0056d3;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-
-
-        /* Chat container styles */
+        /* 聊天主容器 */
         #chat-container {
             display: flex;
             flex-direction: column;
-            height: 100%; /* Important: Use 100% to fill body */
-            max-width: 780px;
+            height: 100%;
+            max-width: 900px;
             margin: 0 auto;
+            position: relative;
         }
 
+        /* 顶部导航/状态栏模拟 */
+        header {
+            padding: 20px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        /* 消息区域 */
         #messages {
             flex: 1;
-            padding: 20px 15px;
+            padding: 20px;
+            padding-bottom: 120px; /* 为悬浮输入框留出空间 */
             overflow-y: auto;
-            max-width: 95%;
-	bottom: 20px;
-            //margin: 0 auto;
-            //box-sizing: border-box;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
         }
+
+        /* 隐藏滚动条但保留功能 */
+        #messages::-webkit-scrollbar { width: 0px; background: transparent; }
 
         .message {
-            //border-radius: var(--border-radius);
-            padding: 10px 14px;
-            margin-bottom: 20px;
+            max-width: 85%;
+            margin-bottom: 16px;
+            padding: 12px 18px;
+            border-radius: 22px;
+            font-size: 16px;
+            line-height: 1.5;
+            position: relative;
             word-wrap: break-word;
-            max-width: 98%;
-	transition: background-color 0.3s ease-out; /* Example transition */
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
-        .message.user {
-            color: #004085;
-            text-align: right;
-            align-self: flex-end;
+        @keyframes popIn {
+            from { opacity: 0; transform: translateY(10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
+        /* AI 消息样式 - 毛玻璃 */
         .message.bot {
-            color: #1c1c1e;
-            text-align: left;
             align-self: flex-start;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.5);
+            color: #000;
+            border-bottom-left-radius: 4px;
         }
 
-        /* Locked input container styles */
+        /* 用户消息样式 - 渐变 */
+        .message.user {
+            margin-left: auto; /* Push to right */
+            background: var(--primary-gradient);
+            color: white;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0, 118, 255, 0.3);
+        }
+
+        /* 输入区域容器 - 悬浮玻璃条 */
         #input-container {
-    display: flex;
-    background-color: #F5F5F7;
-    padding: 10px; /* Reduced padding for mobile */
-    position: fixed; /* Use fixed for better mobile handling */
-    bottom: 0px; /* Added bottom spacing */
-    left: 0; /* Ensure it spans the full width */
-    right: 0;
-    box-sizing: border-box;
-    align-items: flex-end; /* Center vertically */
-    z-index: 100; /* Ensure it's above other content */
-    padding-bottom: env(safe-area-inset-bottom); /* Account for safe area */
-   max-width: 780px; /* Added max-width */
-    margin: 0 auto; /* Center the container */
-}
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
+            max-width: 800px;
+            z-index: 100;
+            padding: 0;
+        }
 
-#input-wrapper {
-     flex-grow: 1;
-    position: relative;
-    display: flex; /* Important for aligning textarea and button */
-    flex-direction: column; /* Stack textarea and optional placeholder */
+        #input-wrapper {
+            display: flex;
+            align-items: flex-end;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(30px) saturate(200%);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 28px;
+            padding: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
 
+        #input-wrapper:focus-within {
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
 
-}
+        #user-input {
+            flex-grow: 1;
+            border: none;
+            background: transparent;
+            padding: 12px 15px;
+            font-size: 16px;
+            font-family: var(--font-family);
+            max-height: 120px;
+            resize: none;
+            outline: none;
+            color: #000;
+            border-radius: 20px;
+        }
 
-#user-input {
-    width: 100%;
-    padding: 10px 12px; /* Reduced padding */
-    border: 1px solid #d2d2d7;
-    border-radius: 10px;
-    font-size: 15px; /* Increased font size for mobile */
-    font-family: var(--font-family);
-    box-sizing: border-box;
-    resize: vertical;
-    min-height: 44px; /* Minimum height for touch */
-    max-height: 150px; /* Reduced max height */
-    overflow-y: auto;
-    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); /* Smooth transition with easing */
-}
+        /* 发送按钮 */
+        .send-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-left: 8px;
+            flex-shrink: 0;
+            transition: transform 0.2s, opacity 0.2s;
+            margin-bottom: 2px; /* Align with bottom of multiline text */
+        }
 
-#user-input:focus {
-  outline: none;
-  border-radius: 20px; /* Maintains border radius on focus */
-  border: 1px solid #d2d2d7;
-  box-shadow: 0 0 15px rgba(220, 223, 245, 0.5); /* Updated box-shadow for better visibility */
-}
+        .send-button:hover:not(:disabled) { transform: scale(1.05); }
+        .send-button:active:not(:disabled) { transform: scale(0.95); }
+        .send-button:disabled { opacity: 0.5; background: #ccc; cursor: not-allowed; }
+        .send-button svg { width: 18px; height: 18px; fill: white; transform: translateX(1px); }
 
-#user-input.scrolled {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
+        /* 工具栏 (模型选择 & 设置) */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            margin-right: 8px;
+            margin-bottom: 5px;
+        }
 
+        .icon-btn {
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.2s;
+            opacity: 0.6;
+        }
+        .icon-btn:hover { background: rgba(0,0,0,0.05); opacity: 1; }
 
-#user-input::-webkit-scrollbar {
-    width: 5px; /* Adjust the width as needed */
-}
+        /* 模型选择下拉 */
+        #model-select {
+            background: transparent;
+            border: none;
+            font-size: 12px;
+            color: #333;
+            max-width: 100px;
+            margin-right: 5px;
+            outline: none;
+            opacity: 0.7;
+            font-weight: 500;
+        }
 
-#user-input::-webkit-scrollbar-thumb {
-    background-color: #888; /* Color of the scrollbar thumb */
-    border-radius: 6px; /* Rounded corners for the thumb */
-}
-
-#user-input::-webkit-scrollbar-track {
-    background-color: #f1f1f1; /* Color of the scrollbar track */
-}
-
-.send-button {
-     position: absolute;
-    bottom: 9px; /* Position at the bottom */
-    right: 100px;
-    width: 36px;
-    height: 36px;
-    border: none;
-    border-radius: 50%;
-    background-color: #007aff;
-    color: white;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-	transition: background-color 0.3s ease-out, transform 0.1s ease-out; /* Example transitions */
-}
-
-	.send-button:hover {
-	    background-color: #005eff;
-	}
-
-	.send-button:active {
-	    background-color: #004de0;
-	}
-
-	.send-button:disabled {
-	    background-color: #c7c7cc;
-	    cursor: not-allowed;
-	}
-
-	.message, .send-button, #user-input {
-	    border-radius: var(--border-radius);
-	}
-
-
-	/* Styles omitted for brevity */
+        /* 设置面板 - 玻璃弹窗 */
         #settings-container {
-            display: none; /* Initially hidden */
-            border: 1px solid #ccc;
-            padding: 10px;
+            display: none;
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 300px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            padding: 20px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            z-index: 200;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #settings-container label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 5px;
             margin-top: 10px;
         }
 
-	#show-settings {
-  padding: 5px 10px; /* Adjust padding for icon button */
-  background-color: #ffffff; /* Consistent background color */
-  border: none; /* No border for icon button */
-  cursor: pointer;
-  color: #333; /* Icon color */
-  font-size: 18px; /* Larger font for icon */
-}
+        #settings-container input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.5);
+            font-size: 14px;
+            outline: none;
+        }
 
-#show-settings:hover {
-  background-color: #005eff; /* Lighten background on hover */
-}
+        #settings-container button {
+            margin-top: 15px;
+            width: 100%;
+            padding: 10px;
+            background: #000;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
 
-.message, .send-button, #user-input, #model-select-button, #show-settings {
-  border-radius: var(--border-radius); /* Consistent border radius */
-}
-
-#model-selector {
-  display: flex; /* Allow button and select side-by-side */
-  margin-left: 10px;
- align-items: center; /* Important for alignment */
-}
-
-#model-select-button {
-  padding: 8px 5px; /* Adjust padding for button */
-  font-size: 14px; /* Smaller font for button text */
-  border: none; /* 1px solid #d0d0d0; */
-  //background-color: #ffffff;
-  background: transparent; /* Transparent background */
-  cursor: pointer;
-  color: #333; /* Adjust button text color */
-}
-
-
- /* Model dropdown styles */
-       #model-select {
-    padding: 8px 25px 8px 10px; /* Adjust padding for arrow */
-    font-size: 16px;
-    border: 1px solid #d0d0d0;
-    background-color: #ffffff;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    flex-shrink: 0;
-    background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>"); /* Add arrow icon */
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 1em;
-    width: 40px; /* Set a fixed width */
-    text-indent: -9999px; /* Hide the text by indenting it off-screen */
-    overflow: hidden; /* Hide any overflowing text */
-}
+        /* Markdown Styles fix */
+        .message p { margin: 0 0 0.5em 0; }
+        .message p:last-child { margin: 0; }
+        .message code { background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 4px; font-family: monospace; }
+        .message pre { background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; overflow-x: auto; }
+        
+        /* Loading Dots */
+        .typing-indicator span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: #333;
+            border-radius: 50%;
+            animation: typing 1s infinite;
+            margin: 0 2px;
+            opacity: 0.5;
+        }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
 
     </style>
 </head>
-
 <body>
 
-  <div id="chat-container">
-    <div id="messages"></div>
-    <div id="input-container">
+    <div id="dynamic-bg"></div>
 
-        <textarea id="user-input"></textarea>
-        <button class="send-button" id="send-button" disabled>Send</button>
+    <div id="chat-container">
+        <header>AI Assistant</header>
+        
+        <div id="messages">
+            <div class="message bot">Hello! I am your AI assistant. How can I help you today?</div>
+        </div>
 
+        <div id="input-container">
+            <div id="settings-container">
+                <h3 style="margin:0 0 10px 0; font-size:16px;">API Settings</h3>
+                <label for="api-key">API KEY</label>
+                <input type="password" id="api-key" placeholder="sk-..." value="sk-qrkolqnrrnvntvatlimlqczoxtztfhernjejdugbswdq">
+                
+                <label for="api-url">API URL</label>
+                <input type="text" id="api-url" placeholder="https://..." value="https://api.siliconflow.cn/v1/chat/completions">
+                
+                <button id="save-api">Save & Close</button>
+            </div>
 
-<select id="model-select">
-	<option value="deepseek-ai/DeepSeek-V3.1">DeepSeek-V3.1</option>
-            <option value="deepseek-ai/DeepSeek-R1-0528-Qwen3-8B">Deepseek-r1-0528-8b</option>
-            <option value="deepseek-chat">DeepSeek</option>
-            <option value="deepseek-ai/DeepSeek-R1">DeepSeek-R1</option>
-            <option value="Qwen/Qwen2.5-Coder-32B-Instruct">QwenCoder32</option>
-        </select>
-
-<button id="show-settings">⚙️</button> <div id="settings-container">
-        <label for="api-key">KEY: </label>
-<input type="text" id="api-key" style="width: 200px;" value="sk-qrkolqnrrnvntvatlimlqczoxtztfhernjejdugbswdq"><br><br>
-
-<label for="api-url">URL: </label>
-<input type="text" id="api-url" style="width: 200px;" value="https://api.siliconflow.cn/v1/chat/completions"><br><br>
-
-        <button id="save-api">Save API</button>
+            <div id="input-wrapper">
+                <div class="toolbar">
+                    <button id="show-settings" class="icon-btn" title="Settings">⚙️</button>
+                    <select id="model-select" title="Select Model">
+                        <option value="deepseek-ai/DeepSeek-V3">DeepSeek V3</option>
+                        <option value="deepseek-ai/DeepSeek-R1">DeepSeek R1</option>
+                        <option value="Qwen/Qwen2.5-Coder-32B-Instruct">Qwen Coder</option>
+                        <option value="deepseek-chat">DeepSeek Chat</option>
+                    </select>
+                </div>
+                
+                <textarea id="user-input" rows="1" placeholder="Message..."></textarea>
+                
+                <button class="send-button" id="send-button" disabled>
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+                </button>
+            </div>
+        </div>
     </div>
 
-    </div>
-  </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> <script>
+    <script>
         document.addEventListener('DOMContentLoaded', function() {
-      const messagesContainer = document.getElementById('messages');
-      const userInput = document.getElementById('user-input');
-      const sendButton = document.getElementById('send-button');
-const apiKeyInput = document.getElementById('api-key');
-const apiUrlInput = document.getElementById('api-url');
-const showSettingsButton = document.getElementById('show-settings');
-const settingsContainer = document.getElementById('settings-container');
-const saveApiButton = document.getElementById('save-api');
-const modelSelect = document.getElementById('model-select');
+            // --- UI & Background Logic ---
+            
+            // 随机苹果风格壁纸
+            const wallpapers = [
+                "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop", // Liquid Blue
+                "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop", // Abstract Flows
+                "https://images.unsplash.com/photo-1620641788421-7f1c33858558?q=80&w=2670&auto=format&fit=crop", // Pink/Purple Mesh
+                "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2670&auto=format&fit=crop", // Classic Gradient
+                "https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?q=80&w=2670&auto=format&fit=crop"  // Rose Gold
+            ];
+            
+            function setRandomBackground() {
+                const bg = document.getElementById('dynamic-bg');
+                const randomImg = wallpapers[Math.floor(Math.random() * wallpapers.length)];
+                // 创建一个临时图片对象来预加载，防止闪烁
+                const imgLoader = new Image();
+                imgLoader.src = randomImg;
+                imgLoader.onload = () => {
+                    bg.style.backgroundImage = `url('${randomImg}')`;
+                };
+            }
+            setRandomBackground();
 
+            // --- Chat Logic ---
 
-	userInput.addEventListener('input', function() {
- 	 this.style.height = 'auto';
-	  this.style.height = (this.scrollHeight) + 'px';
-	});
+            const messagesContainer = document.getElementById('messages');
+            const userInput = document.getElementById('user-input');
+            const sendButton = document.getElementById('send-button');
+            const apiKeyInput = document.getElementById('api-key');
+            const apiUrlInput = document.getElementById('api-url');
+            const showSettingsButton = document.getElementById('show-settings');
+            const settingsContainer = document.getElementById('settings-container');
+            const saveApiButton = document.getElementById('save-api');
+            const modelSelect = document.getElementById('model-select');
 
+            // 自动调整输入框高度
+            userInput.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+                checkInput();
+            });
 
-// On page load
-let apiKey = getCookie('API_KEY') || localStorage.getItem('apiKey');
-let apiUrl = getCookie('API_URL') || localStorage.getItem('apiUrl');
-let selectedModel = getCookie('SELECTED_MODEL') || localStorage.getItem('selectedModel');
-
-if (selectedModel) {
-    modelSelect.value = selectedModel; // Set the selected model in the dropdown
-}
-
-
-let context = [];
-const MAX_CONTEXT_SIZE = 3;
-
-// Check for existing API credentials
-if (apiKey && apiUrl) {
-    // Hide settings container
-    settingsContainer.style.display = 'none';
-} else {
-    // Show settings container
-    settingsContainer.style.display = 'block';
-}
-
-showSettingsButton.addEventListener('click', () => {
-  if (settingsContainer.style.display === 'none') {
-    settingsContainer.style.display = 'block';
-  } else {
-    settingsContainer.style.display = 'none';
-  }
-});
-
-saveApiButton.addEventListener('click', () => {
-    apiKey = apiKeyInput.value;
-    apiUrl = apiUrlInput.value;
-    selectedModel = modelSelect.value; // Get the selected model
-
-    // Set cookies with 365 days expiration
-    setCookie('API_KEY', apiKey, 365);
-    setCookie('API_URL', apiUrl, 365);
-    setCookie('SELECTED_MODEL', selectedModel, 365);
-
-    // Optionally, you can still store in localStorage for fallback
-    localStorage.setItem('apiKey', apiKey);
-    localStorage.setItem('apiUrl', apiUrl);
-    localStorage.setItem('selectedModel', selectedModel);
-
-    settingsContainer.style.display = 'none'; // Hide after saving
-});
-
-
-
-function setCookie(name, value, days) {
-    let expires = "";
-    if (days) {
-        const date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "") + expires + "; path=/";
-}
-
-modelSelect.addEventListener('change', (event) => {
-  const selectedModel = event.target.value;
-  setCookie('SELECTED_MODEL', selectedModel, 365);
-  // Optionally, update localStorage as well
-  localStorage.setItem('selectedModel', selectedModel);
-});
-
-function checkInput() {
-        sendButton.disabled = userInput.value.trim() === "";
-	this.style.height = 'auto'; // Reset height to recalculate
-  this.style.height = (this.scrollHeight) + 'px'; // Set height to scrollHeight
-    }
-
-    sendButton.addEventListener('click', sendMessage);
-
-    userInput.addEventListener('input', checkInput); // Listen for input changes
-    userInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault();
-            sendMessage();
-        }
-    });
-
-    // Initial check when the page loads
-    checkInput();
-
-
-
-
-function getCookie(name) {
-    const nameEQ = name + "=";
-    const ca = document.cookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-    }
-    return null;
-}
-
-	function appendMessage(content, sender) {
-                const messageElement = document.createElement('div');
-                messageElement.className = `message ${sender}`;
-                if (typeof marked !== 'undefined') {
-                    messageElement.innerHTML = marked.parse(content);
-                } else {
-                    messageElement.textContent = content; // Fallback if marked isn't loaded
+            // Cookie/Storage Helpers
+            function setCookie(name, value, days) {
+                let expires = "";
+                if (days) {
+                    const date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = "; expires=" + date.toUTCString();
                 }
-                messagesContainer.appendChild(messageElement);
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                document.cookie = name + "=" + (value || "") + expires + "; path=/";
             }
 
-	async function sendMessage() {
-        const userMessage = userInput.value.trim();
-   	 if (!userMessage || !apiKey || !apiUrl) {
-     	   sendButton.disabled = true; // Keep button disabled if API info is missing
-     	   sendButton.textContent = "Send";
-  	      return;
-  	  }
+            function getCookie(name) {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+                }
+                return null;
+            }
 
-   	 sendButton.disabled = true; // Disable during sending
-    	sendButton.textContent = "Loading...";
-                const selectedModel = modelSelect.value;
+            // 初始化状态
+            let apiKey = getCookie('API_KEY') || localStorage.getItem('apiKey') || apiKeyInput.value;
+            let apiUrl = getCookie('API_URL') || localStorage.getItem('apiUrl') || apiUrlInput.value;
+            let selectedModel = getCookie('SELECTED_MODEL') || localStorage.getItem('selectedModel');
 
-                appendMessage(userMessage, 'user');
-	// Reset textarea height and class *before* clearing the value
-                userInput.style.height = 'auto';
-                userInput.classList.remove('multiline');
-                userInput.value = ''; // Clear the input AFTER resetting height
+            // 同步 UI
+            if (apiKey) apiKeyInput.value = apiKey;
+            if (apiUrl) apiUrlInput.value = apiUrl;
+            if (selectedModel) modelSelect.value = selectedModel;
 
+            let context = [];
+            const MAX_CONTEXT_SIZE = 6; // 增加了一点上下文
 
-                if (context.length > MAX_CONTEXT_SIZE) {
-                    const summaryPrompt = {
-                        role: 'user',
-                        content: `Recall context briefly. `
-                    };
-                    context.push(summaryPrompt);
+            // Settings Toggle
+            showSettingsButton.addEventListener('click', (e) => {
+                e.stopPropagation(); // 防止冒泡
+                if (settingsContainer.style.display === 'block') {
+                    settingsContainer.style.display = 'none';
+                } else {
+                    settingsContainer.style.display = 'block';
+                }
+            });
+
+            // 点击外部关闭设置
+            document.addEventListener('click', (e) => {
+                if (!settingsContainer.contains(e.target) && e.target !== showSettingsButton) {
+                    settingsContainer.style.display = 'none';
+                }
+            });
+
+            saveApiButton.addEventListener('click', () => {
+                apiKey = apiKeyInput.value.trim();
+                apiUrl = apiUrlInput.value.trim();
+                selectedModel = modelSelect.value;
+
+                setCookie('API_KEY', apiKey, 365);
+                setCookie('API_URL', apiUrl, 365);
+                setCookie('SELECTED_MODEL', selectedModel, 365);
+                
+                localStorage.setItem('apiKey', apiKey);
+                localStorage.setItem('apiUrl', apiUrl);
+                localStorage.setItem('selectedModel', selectedModel);
+
+                settingsContainer.style.display = 'none';
+                alert("Settings Saved!");
+            });
+
+            modelSelect.addEventListener('change', (e) => {
+                setCookie('SELECTED_MODEL', e.target.value, 365);
+                localStorage.setItem('selectedModel', e.target.value);
+            });
+
+            function checkInput() {
+                sendButton.disabled = userInput.value.trim() === "";
+            }
+
+            function appendMessage(content, sender, isHtml = false) {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${sender}`;
+                
+                if (isHtml) {
+                    messageElement.innerHTML = content;
+                } else {
+                    if (sender === 'bot' && typeof marked !== 'undefined') {
+                        messageElement.innerHTML = marked.parse(content);
+                    } else {
+                        messageElement.textContent = content;
+                    }
+                }
+                
+                messagesContainer.appendChild(messageElement);
+                // 滚动到底部
+                requestAnimationFrame(() => {
+                    messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: 'smooth' });
+                });
+                return messageElement;
+            }
+
+            async function sendMessage() {
+                const userMessage = userInput.value.trim();
+                if (!userMessage) return;
+
+                if (!apiKey) {
+                    alert("Please set your API Key in settings (⚙️).");
+                    settingsContainer.style.display = 'block';
+                    return;
                 }
 
-                context.push({ role: 'user', content: userMessage });
+                // UI Updates
                 userInput.value = '';
+                userInput.style.height = 'auto';
+                sendButton.disabled = true;
+                
+                // Add User Message
+                appendMessage(userMessage, 'user');
+                context.push({ role: 'user', content: userMessage });
 
-                sendButton.textContent = "Loading...";
-	sendButton.disabled = true;
+                // Add Typing Indicator
+                const loadingId = 'loading-' + Date.now();
+                const loadingElement = appendMessage('<div class="typing-indicator"><span></span><span></span><span></span></div>', 'bot', true);
+                loadingElement.id = loadingId;
+
+                const currentModel = modelSelect.value;
 
                 try {
                     const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            model: selectedModel,
-            messages: context.slice(-MAX_CONTEXT_SIZE),
-	    max_tokens: 4096,
-            temperature: 0.7,
-            top_p: 0.9,
-		frequency_penalty: 0.5, 
-  		presence_penalty: 0.3,
-	    n: 1,
-            stream: true
-        })
-    });
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: currentModel,
+                            messages: context.slice(-MAX_CONTEXT_SIZE),
+                            stream: true,
+                            temperature: 0.7
+                        })
+                    });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API Error:", errorData);
-        appendMessage(`Error: ${response.status} - ${response.statusText}`, 'bot');
-        return;
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder('utf-8');
-    let partialResponse = "";
-    let isSummary = false;
-
-    const messageElement = document.createElement('div');
-    messageElement.className = `message bot`;
-    messagesContainer.appendChild(messageElement);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-            messageElement.innerHTML = marked.parse(partialResponse);
-            if (isSummary) {
-                context.pop(); // Remove the summary prompt after receiving the summary
-            }
-            context.push({ role: 'assistant', content: partialResponse });
-            break;
-        }
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n').filter(line => line.trim() !== '');
-
-        for (const line of lines) {
-            if (line.startsWith('data: ')) {
-                try {
-                    const data = JSON.parse(line.substring(6));
-                    if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
-                        if (context.length > 2 && !isSummary && partialResponse.length === 0 && data.choices[0].delta.content.toLowerCase().includes("summary:")) {
-                            isSummary = true;
-                        }
-                        partialResponse += data.choices[0].delta.content;
-                        messageElement.innerHTML = marked.parse(partialResponse);
-                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.status}`);
                     }
-                } catch (parseError) {
-                    console.error("Parse error:", parseError, "Line:", line);
-                }
-            }
-        }
-    }
-} catch (error) {
-        console.error(error);
-        appendMessage('Error: Unable to connect to the server.', 'bot');
-      } finally {
+
+                    // Remove loading indicator
+                    loadingElement.remove();
+
+                    // Create Bot Message container
+                    let botMessageContent = "";
+                    const botMessageElement = appendMessage("", 'bot');
+                    
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder('utf-8');
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split('\n');
+
+                        for (const line of lines) {
+                            if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+                                try {
+                                    const data = JSON.parse(line.substring(6));
+                                    if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
+                                        botMessageContent += data.choices[0].delta.content;
+                                        // 实时渲染 Markdown
+                                        botMessageElement.innerHTML = marked.parse(botMessageContent);
+                                        // 保持在底部，但如果用户正在往上看不强制滚动
+                                        const isAtBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 100;
+                                        if(isAtBottom) {
+                                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.error("Parse error", e);
+                                }
+                            }
+                        }
+                    }
+                    
+                    context.push({ role: 'assistant', content: botMessageContent });
+
+                } catch (error) {
+                    document.getElementById(loadingId)?.remove();
+                    appendMessage(`Error: ${error.message}`, 'bot');
+                } finally {
                     sendButton.disabled = false;
-                    sendButton.textContent = "Send";
-	checkInput(); // Check input after message is sent
+                    checkInput();
+                    // 聚焦回输入框 (可选，手机上可能不需要)
+                    // userInput.focus(); 
                 }
             }
 
-
-
-	sendButton.addEventListener('click', sendMessage); // Correct placement!
+            // Event Listeners
+            sendButton.addEventListener('click', sendMessage);
+            
             userInput.addEventListener('keydown', (event) => {
-                if (event.key === 'Enter' && !event.shiftKey) { // Check if Shift key is not pressed
-                    event.preventDefault(); // Prevent default newline behavior
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
                     sendMessage();
-
                 }
             });
+            
+            // Initial check
+            checkInput();
         });
     </script>
 </body>
