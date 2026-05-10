@@ -388,12 +388,18 @@ document.addEventListener('DOMContentLoaded', function() {
   // ===== User Hash (for per-user session isolation) =====
   let userHash = '';
 
-  // Compute user hash from API key
+  // Compute user hash from API key (with fallback for environments without crypto.subtle)
   async function computeUserHash(key) {
     if (!key) return '';
-    const encoder = new TextEncoder();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(key));
-    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    try {
+      const encoder = new TextEncoder();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(key));
+      return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (e) {
+      // Fallback for file:// protocol or environments without crypto.subtle
+      // Use the raw API key as the session identifier
+      return key;
+    }
   }
 
   // ===== State =====
@@ -476,13 +482,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
   async function loadHistory(sessionId) {
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
       const res = await fetch(`${API_BASE}/api/messages?session_id=${sessionId}`, {
-        headers: { 'X-API-Key': apiKey || '' }
+        headers: { 'X-API-Key': apiKey || '' },
+        signal: controller.signal
       });
-      if (!res.ok) return [];
-      return await res.json();
+      clearTimeout(timeout);
+      if (!res.ok) { console.warn('Load history failed:', res.status); return []; }
+      // Handle null/empty response body (e.g., 204 No Content)
+      if (!res.body) return [];
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        console.warn('Load history: failed to parse response body:', e.message);
+        return [];
+      }
+      if (!data) return [];
+      // Worker may return { results: [...] } or direct array
+      return (Array.isArray(data) ? data : (data.results || []));
     } catch (e) {
-      console.warn('Load failed:', e);
+      console.warn('Load history failed:', e.message);
       return [];
     }
   }
@@ -493,8 +514,16 @@ document.addEventListener('DOMContentLoaded', function() {
         headers: { 'X-API-Key': apiKey || '' }
       });
       if (!res.ok) return [];
-      const data = await res.json();
-      return data.results || [];
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        console.warn('Sessions fetch: failed to parse response body:', e.message);
+        return [];
+      }
+      if (!data) return [];
+      // Handle both { results: [...] } and direct array formats
+      return (Array.isArray(data) ? data : (data.results || []));
     } catch (e) {
       console.warn('Sessions fetch failed:', e);
       return [];
@@ -826,7 +855,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (oldApiKey !== apiKey) {
       userHash = await computeUserHash(apiKey);
       // Check if there's an existing session for this user
-      const existingSessionId = localStorage.getItem(userHash + '_chatbot_session_id');
+      // Also check the old empty-key session key for migration compatibility
+      const existingSessionId = localStorage.getItem(userHash + '_chatbot_session_id')
+        || localStorage.getItem('_chatbot_session_id');
       if (existingSessionId) {
         currentSessionId = existingSessionId;
       } else {
@@ -1086,7 +1117,10 @@ document.addEventListener('DOMContentLoaded', function() {
     userHash = await computeUserHash(apiKey);
 
     // Load session ID with per-user localStorage key
-    currentSessionId = localStorage.getItem(userHash + '_chatbot_session_id') || crypto.randomUUID();
+    // Also check the old empty-key session key for migration compatibility
+    currentSessionId = localStorage.getItem(userHash + '_chatbot_session_id')
+      || localStorage.getItem('_chatbot_session_id')
+      || crypto.randomUUID();
 
     const history = await loadHistory(currentSessionId);
     if (history.length > 0) {
